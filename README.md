@@ -12,7 +12,7 @@ Mercury是实现自定义IDL语言自动展开为C++代码的项目，该项目�
 
 # 编译
 
-Mercury基于C++17编写，其依赖于[LLVM](https://github.com/llvm/llvm-project)和[GoogleTest](https://github.com/google/googletest)项目。
+Mercury基于C++17编写，其依赖于[LLVM](https://github.com/llvm/llvm-project)、[inja](https://github.com/pantor/inja)和[GoogleTest](https://github.com/google/googletest)项目。
 
 | 系统      | windows                   |
 | --------- | ------------------------- |
