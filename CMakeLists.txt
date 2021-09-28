@@ -13,5 +13,8 @@ endif()
 find_package(LLVM CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
 
-add_subdirectory("abi_interface_generator")
+add_subdirectory("src")
 add_subdirectory("app")
+
+enable_testing()
+add_subdirectory("test")

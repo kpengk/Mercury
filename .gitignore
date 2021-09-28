@@ -33,5 +33,6 @@
 
 .vs/
 .vscode/
+.cmake/
 out/
 build/

@@ -49,7 +49,7 @@ namespace glasssix::ymer
 			std::ifstream ifs(file.data());
 			if (!ifs.is_open())
 			{
-				std::cout << u8"open file fail. " << file << std::endl;
+				fprintf(stderr, u8"open file fail. [%s].\n", file.data());
 				if (ok)
 					*ok = false;
 
@@ -83,8 +83,8 @@ namespace glasssix::ymer
 			}
 			catch (const std::exception& e)
 			{
+				fprintf(stderr, u8"\033[31mGenerate code exception: %s.\n\033[0m", e.what());
 				ofs.close();
-				printf(u8"\033[31mGenerate code exception: %s.\n\033[0m", e.what());
 				return false;
 			}
 			ofs.close();
@@ -148,8 +148,9 @@ namespace glasssix::ymer
 		bool load_predefined(std::string_view file_name)
 		{
 			predefined_file_ = file_name;
-
-			return true;
+			bool ok{};
+			read_file(file_name, &ok);
+			return ok;
 		}
 
 		bool load_template(std::string_view interface_file, std::string_view impl_file, std::string_view func_file)
@@ -252,7 +253,7 @@ namespace glasssix::ymer
 
 				if (!generator(decl))
 				{
-					printf(u8"\033[31mFailed to generate interface %s.\033[0m\n", decl.class_name.c_str());
+					fprintf(stderr, u8"\033[31mFailed to generate interface %s.\033[0m\n", decl.class_name.c_str());
 				}
 			}
 
@@ -334,7 +335,7 @@ namespace glasssix::ymer
 			}
 			catch (const std::exception& e)
 			{
-				printf(u8"\033[31mGenerate code exception: %s.\n\033[0m", e.what());
+				fprintf(stderr, u8"\033[31mGenerate code exception: %s.\n\033[0m", e.what());
 			}
 
 			return true;

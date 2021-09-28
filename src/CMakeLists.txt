@@ -9,7 +9,7 @@ file(GLOB SRCFILE *.h *.cpp)
 add_library(${targetname} SHARED ${SRCFILE})
 
 
-target_include_directories(${targetname} PRIVATE ${LLVM_INCLUDE_DIRS})
+target_include_directories(${targetname} PRIVATE ${LLVM_INCLUDE_DIRS} ../include)
 
 # link
 message("CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
@@ -24,6 +24,4 @@ target_link_directories(${targetname} PRIVATE ${LLVM_LIB_DIR})
 
 file(GLOB LIBS ${LLVM_LIB_DIR}/*.lib)
 
-#llvm_map_components_to_libnames(llvm_libs Support Core IRReader)
-#target_link_libraries(${targetname} PRIVATE ${llvm_libs})
 target_link_libraries(${targetname} PRIVATE ${LIBS} pantor::inja)

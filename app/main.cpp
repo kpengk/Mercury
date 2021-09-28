@@ -1,8 +1,8 @@
 ﻿#include <iostream>
 
 #include "interface_generator.h"
-#include "../cxxopts/cxxopts.hpp"
-#include "../cxxopts/cxxopts_extension.hpp"
+#include "cxxopts/cxxopts.hpp"
+#include "cxxopts/cxxopts_extension.hpp"
 
 namespace
 {
