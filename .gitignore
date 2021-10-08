@@ -30,9 +30,13 @@
 *.exe
 *.out
 *.app
+*.vsix
 
 .vs/
 .vscode/
+.vscode-test/
 .cmake/
 out/
 build/
+dist
+node_modules
