@@ -1,0 +1,94 @@
+{
+  "name": "g6-abi-generator",
+	"displayName": "g6_abi_generator",
+	"description": "Custom IDL generate cpp",
+	"author": "kp",
+	"license": "MIT",
+	"version": "0.0.1",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Microsoft/vscode-extension-samples"
+	},
+	"publisher": "Glasssix",
+	"categories": ["Other"],
+	"keywords": [
+		"multi-root ready"
+	],
+	"engines": {
+		"vscode": "^1.60.0"
+	},
+	"activationEvents": [
+		"onLanguage:plaintext",
+        	"onCommand:g6-abi-generator.idltocpp"
+	],
+	"main": "./client/out/extension",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "Example configuration",
+			"properties": {
+				"g6-abi-generator.generatorPath": {
+					"type": ["string", "null"],
+					"default": null,
+					"description": "自定义IDL的代码生成器（interface_generator_app.exe）路径."
+				},
+				"g6-abi-generator.outputPath": {
+					"type": ["string", "null"],
+					"default": null,
+					"description": "生成的C++代码的路径."
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "g6-abi-generator.idltocpp",
+				"title": "IDL To CPP"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "g6-abi-generator.idltocpp",
+				"key": "ctrl+f10",
+				"mac": "cmd+f10",
+				"when": "editorTextFocus"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"when": "editorFocus",
+					"command": "g6-abi-generator.idltocpp",
+					"group": "navigation"
+				}
+			]
+		},
+		"languages": [{
+            "id": "G6IDL",
+            "extensions": [
+                ".g6idl"
+            ],
+            "configuration": "./g6idl.language.json"
+        }]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w",
+		"lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
+		"postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
+		"test": "sh ./scripts/e2e.sh"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.60.0",
+		"@types/glob": "^7.1.4",
+		"@types/mocha": "^9.0.0",
+		"@types/node": "14.x",
+		"@typescript-eslint/eslint-plugin": "^4.31.1",
+		"@typescript-eslint/parser": "^4.31.1",
+		"eslint": "^7.32.0",
+		"glob": "^7.1.7",
+		"mocha": "^9.1.1",
+		"typescript": "^4.4.3",
+		"@vscode/test-electron": "^1.6.2"
+	}
+}
