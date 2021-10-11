@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
+using System.Collections.Concurrent;
 using System.ComponentModel.Design;
 using System.Globalization;
 using System.IO;
@@ -107,7 +108,7 @@ namespace G6IdlToCpp
             // get generator path
             G6IdlToCppPackage idlToCppPackage = this.package as G6IdlToCppPackage;
             string generatorDir = idlToCppPackage.OptionGeneratorPath;
-            if (generatorDir == null || generatorDir.Length <= 0)
+            if (string.IsNullOrWhiteSpace(generatorDir))
             {
                 ShowMessage("Please set the generator path in the \"Tools -> Options -> IDL To Cpp\" dialog box.");
                 return;
@@ -126,7 +127,7 @@ namespace G6IdlToCpp
 
             // get output path
             string outPath = idlToCppPackage.OptionOutputPath;
-            if (outPath.Length <= 0)
+            if (string.IsNullOrWhiteSpace(outPath))
             {
                 outPath = "idl-out";
             }
@@ -141,7 +142,7 @@ namespace G6IdlToCpp
                 outPath = string.Format(CultureInfo.CurrentCulture, "{0}\\{1}", currentPath, outPath);
             }
 
-            // run
+            // create code generator process
             System.Diagnostics.Process proc = new System.Diagnostics.Process();
             proc.StartInfo.FileName = generatorPath;
             proc.StartInfo.Arguments = string.Format(CultureInfo.CurrentCulture, "-i {0} -d {1} -o {2}",
@@ -150,14 +151,37 @@ namespace G6IdlToCpp
             proc.StartInfo.RedirectStandardOutput = true;
             proc.StartInfo.UseShellExecute = false;
             proc.StartInfo.CreateNoWindow = true;
+            // use OutputDataReceived() / ErrorDataReceived() in order to read both streams without deadlocks
+            ConcurrentQueue<string> messages = new ConcurrentQueue<string>();
+            proc.ErrorDataReceived += (object se, System.Diagnostics.DataReceivedEventArgs args) =>
+            {
+                string data = args.Data;
+                if (!string.IsNullOrWhiteSpace(data))
+                    messages.Enqueue(data);
+            };
+            proc.OutputDataReceived += (object se, System.Diagnostics.DataReceivedEventArgs args) =>
+            {
+                string data = args.Data;
+                if (!string.IsNullOrWhiteSpace(data))
+                    messages.Enqueue(data);
+            };
+
             proc.Start();
+            proc.BeginErrorReadLine();
+            proc.BeginOutputReadLine();
+            string codeFileName = Path.GetFileName(filename);
+            while (!proc.HasExited || !messages.IsEmpty)
+            {
+                if (messages.TryDequeue(out string data))
+                {
+                    // input.cc:2:9: warning: ...
+                    ShowMessage(data.Replace("input.cc", codeFileName));
+                }
+                else
+                    System.Threading.Thread.Sleep(1);
+            }
 
-            string outStr = proc.StandardOutput.ReadToEnd();
-            string errStr = proc.StandardError.ReadToEnd();
-            proc.Close();
-
-            string message = string.Format(CultureInfo.CurrentCulture, "{0}\n{1}", outStr, errStr);
-            ShowMessage(message);
+            proc.WaitForExit();
         }
 
         private void CreatePane(Guid paneGuid, string title, bool visible, bool clearWithSolution)
@@ -167,11 +191,7 @@ namespace G6IdlToCpp
             IVsOutputWindow output = (IVsOutputWindow)Package.GetGlobalService(typeof(SVsOutputWindow));
 
             // Create a new pane.  
-            output.CreatePane(
-                ref paneGuid,
-                title,
-                Convert.ToInt32(visible),
-                Convert.ToInt32(clearWithSolution));
+            output.CreatePane(ref paneGuid, title, Convert.ToInt32(visible), Convert.ToInt32(clearWithSolution));
 
             // Retrieve the new pane.
             output.GetPane(ref paneGuid, out pane);
