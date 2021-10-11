@@ -52,8 +52,8 @@ int main(int argc, char** argv) try
 
 	// get program dir
 	const std::string_view bin_path(argv[0]);
-	auto index = std::max(bin_path.find_last_of('\\'), bin_path.find_last_of('/'));
-	const std::string dirPath(bin_path.substr(0, index + 1));
+	auto index = std::max(bin_path.find_last_of('\\') + 1, bin_path.find_last_of('/') + 1);
+	const std::string dirPath(bin_path.substr(0, index));
 
 	// generator
 	glasssix::ymer::interface_generator handle;

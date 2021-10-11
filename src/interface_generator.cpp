@@ -75,6 +75,7 @@ namespace glasssix::ymer
 			std::ofstream ofs(code_file_name.data());
 			if (!ofs.is_open())
 			{
+				fprintf(stderr, u8"open output file fail. [%s].\n", code_file_name.data());
 				return false;
 			}
 			try
@@ -182,9 +183,14 @@ namespace glasssix::ymer
 			std::string str_path = std::filesystem::absolute(syspath).string();
 			if (const char last = str_path.at(str_path.length() - 1); last != '\\' && last != '/')
 			{
+#ifdef _WIN32
+				str_path.push_back('\\');
+#else
 				str_path.push_back('/');
+#endif // WIN32_
 			}
 			output_path_ = str_path;
+			fprintf(stdout, u8"Output path: %s\n", output_path_.c_str());
 		}
 
 		bool run(std::string_view file_name)
