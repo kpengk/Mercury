@@ -5,8 +5,8 @@
 namespace glasssix::ymer
 {
 	/* param_decl.attr
-	 * in:0, out: 1 inout: 2
-	 * set:0, get: 1 setget:2
+	 *   in:0, out: 1 inout: 2
+	 *   set:0, get: 1 setget:2
 	 */
 	struct param_decl
 	{

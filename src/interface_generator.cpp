@@ -95,7 +95,7 @@ namespace glasssix::ymer
 
 		static std::vector<std::string> depend_header(const std::string& code)
 		{
-			std::regex pattern(R"(#\s*include\s*[<"]\s*([\w/\\]+)[\.]?[hpxc]*\s*[>"])");
+			static const std::regex pattern(R"(#\s*include\s*[<"]\s*([\w/\\]+)[\.]?[hpxc]*\s*[>"])");
 
 			std::vector<std::string> result;
 
@@ -172,8 +172,11 @@ namespace glasssix::ymer
 			}
 		}
 
-		void set_output_path(std::string_view path)
+		std::string_view set_output_path(std::string_view path)
 		{
+			if (path.empty())
+				path = "./";
+
 			auto syspath = std::filesystem::path(path);
 			if (!std::filesystem::exists(syspath))
 			{
@@ -181,7 +184,7 @@ namespace glasssix::ymer
 			}
 
 			std::string str_path = std::filesystem::absolute(syspath).string();
-			if (const char last = str_path.at(str_path.length() - 1); last != '\\' && last != '/')
+			if (const char last = *(--str_path.end()); last != '\\' && last != '/')
 			{
 #ifdef _WIN32
 				str_path.push_back('\\');
@@ -190,92 +193,101 @@ namespace glasssix::ymer
 #endif // WIN32_
 			}
 			output_path_ = str_path;
-			fprintf(stdout, u8"Output path: %s\n", output_path_.c_str());
+			return output_path_;
 		}
 
 		bool run(std::string_view file_name)
 		{
+			interface_json_.clear();
 			std::vector<ymer::interface_decl> all_class_info;
 			if (!analysis(file_name, all_class_info))
 			{
 				return false;
 			}
 
-			for (std::size_t i = 0; i < all_class_info.size(); ++i)
+			if (all_class_info.empty())
 			{
-				if (i + 1 != all_class_info.size())
+				return false;
+			}
+
+			auto decl = --all_class_info.end();
+			if (decl->functions.empty() && decl->fields.empty())
+			{
+				return false;
+			}
+
+			// Interface fields to function
+			for (const param_decl& field : decl->fields)
+			{
+				if (field.attr == 0)//set
 				{
-					continue;
+					function_decl fun_decl;
+					fun_decl.func_name = u8"set_" + field.name;
+					fun_decl.is_const_func = false;
+					fun_decl.return_type = u8"void";
+					fun_decl.return_void = true;
+					fun_decl.params = { field };
+					decl->functions.push_back(fun_decl);
 				}
-
-				interface_decl& decl = all_class_info[i];
-				if (decl.functions.empty() && decl.fields.empty())
+				else if (field.attr == 1)//get
 				{
-					continue;
+					function_decl fun_decl;
+					fun_decl.func_name = u8"get_" + field.name;
+					fun_decl.is_const_func = true;
+					fun_decl.return_type = field.type;
+					fun_decl.return_void = false;
+					decl->functions.push_back(fun_decl);
 				}
-
-				// Interface fields to function
-				for (const param_decl& field : decl.fields)
+				else if (field.attr == 2)//set-get
 				{
-					if (field.attr == 0)//set
-					{
-						function_decl fun_decl;
-						fun_decl.func_name = u8"set_" + field.name;
-						fun_decl.is_const_func = false;
-						fun_decl.return_type = u8"void";
-						fun_decl.return_void = true;
-						fun_decl.params = { field };
-						decl.functions.push_back(fun_decl);
-					}
-					else if (field.attr == 1)//get
-					{
-						function_decl fun_decl;
-						fun_decl.func_name = u8"get_" + field.name;
-						fun_decl.is_const_func = true;
-						fun_decl.return_type = field.type;
-						fun_decl.return_void = false;
-						decl.functions.push_back(fun_decl);
-					}
-					else if (field.attr == 2)//set-get
-					{
-						function_decl set_fun_decl;
-						set_fun_decl.func_name = u8"set_" + field.name;
-						set_fun_decl.is_const_func = false;
-						set_fun_decl.return_type = u8"void";
-						set_fun_decl.return_void = true;
-						param_decl param = field;
-						param.attr = 0;
-						set_fun_decl.params = { param };
-						decl.functions.push_back(set_fun_decl);
+					function_decl set_fun_decl;
+					set_fun_decl.func_name = u8"set_" + field.name;
+					set_fun_decl.is_const_func = false;
+					set_fun_decl.return_type = u8"void";
+					set_fun_decl.return_void = true;
+					param_decl param = field;
+					param.attr = 0;
+					set_fun_decl.params = { param };
+					decl->functions.push_back(set_fun_decl);
 
-						function_decl get_fun_decl;
-						get_fun_decl.func_name = u8"get_" + field.name;
-						get_fun_decl.is_const_func = true;
-						get_fun_decl.return_type = field.type;
-						get_fun_decl.return_void = false;
-						decl.functions.push_back(get_fun_decl);
-					}
-				}
-
-				if (!generator(decl))
-				{
-					fprintf(stderr, u8"\033[31mFailed to generate interface %s.\033[0m\n", decl.class_name.c_str());
+					function_decl get_fun_decl;
+					get_fun_decl.func_name = u8"get_" + field.name;
+					get_fun_decl.is_const_func = true;
+					get_fun_decl.return_type = field.type;
+					get_fun_decl.return_void = false;
+					decl->functions.push_back(get_fun_decl);
 				}
 			}
 
-			return true;
+			return generator(*decl);
 		}
 
 		std::vector<std::string> function_signature()
 		{
-			if (func_interface_.empty())
+			if (interface_json_.empty())
+			{
+				return std::vector<std::string>();
+			}
+
+			std::string func_interface;
+			try
+			{
+				func_interface = inja::render(func_template_code_, interface_json_);
+			}
+			catch (const std::exception& e)
+			{
+				fprintf(stderr, u8"\033[31mGenerate code exception: %s.\n\033[0m", e.what());
+				return std::vector<std::string>();
+			}
+
+			if (func_interface.empty())
 				return std::vector<std::string>();
 
 			std::vector<std::string> funcs;
 			for (std::string::size_type pos{ 0 }; pos != std::string::npos;) {
-				auto idx = func_interface_.find('\n', pos);
+				auto idx = func_interface.find('\n', pos);
 				if (idx != std::string::npos)
-					funcs.push_back(func_interface_.substr(pos, idx - pos));
+					funcs.push_back(func_interface.substr(pos, idx - pos));
 				else
 					break;
 
@@ -326,25 +338,15 @@ namespace glasssix::ymer
 		bool generator(const interface_decl& decl)
 		{
 			// Transfer interface parameters to JSON
-			nlohmann::json interface_json = to_json(decl);
+			interface_json_ = to_json(decl);
 
 			const std::string code_file_name = output_path_ + decl.class_name + ".hpp";
-			generate_code_file(code_file_name, template_code_, interface_json);
+			bool ret = generate_code_file(code_file_name, template_code_, interface_json_);
 
 			const std::string code_impl_file_name = output_path_ + decl.class_name + "_impl.hpp";
-			generate_code_file(code_impl_file_name, impl_template_code_, interface_json);
+			ret &= generate_code_file(code_impl_file_name, impl_template_code_, interface_json_);
 
-			try
-			{
-				func_interface_.clear();
-				func_interface_ = inja::render(func_template_code_, interface_json);
-			}
-			catch (const std::exception& e)
-			{
-				fprintf(stderr, u8"\033[31mGenerate code exception: %s.\n\033[0m", e.what());
-			}
-
-			return true;
+			return ret;
 		}
 
 		std::string to_std_type(const std::string& type) const
@@ -410,10 +412,10 @@ namespace glasssix::ymer
 		std::string template_code_;
 		std::string impl_template_code_;
 		std::string func_template_code_;
-		std::string func_interface_;
 		std::string output_path_;
 		std::vector<std::string> run_args_;
 		std::unordered_map<std::string, std::string> field_mapping_;
+		nlohmann::json interface_json_;
 	};
 
 
@@ -447,9 +449,9 @@ namespace glasssix::ymer
 		impl_->set_include_path(dirs);
 	}
 
-	void interface_generator::set_output_path(std::string_view path)
+	std::string_view interface_generator::set_output_path(std::string_view path)
 	{
-		impl_->set_output_path(path);
+		return impl_->set_output_path(path);
 	}
 
 	bool interface_generator::run(std::string_view file_name)

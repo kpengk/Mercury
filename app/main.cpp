@@ -75,11 +75,16 @@ int main(int argc, char** argv) try
 	}
 
 	handle.set_include_path(std::vector<std::string>{ {"./"}, { depend_path } });
-	handle.set_output_path(output_path);
+	auto absolute_path = handle.set_output_path(output_path);
+	fprintf(stdout, u8"Output path: %s\n", absolute_path.data());
 
 	if (handle.run(input_file))
 	{
 		fprintf(stdout, "Code generated successfully.\n");
+	}
+	else
+	{
+		fprintf(stderr, u8"\033[31mFailed to generate interface.\033[0m\n");
 	}
 
 	return 0;

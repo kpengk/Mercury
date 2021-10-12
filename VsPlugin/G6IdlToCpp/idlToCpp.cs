@@ -113,15 +113,12 @@ namespace G6IdlToCpp
                 ShowMessage("Please set the generator path in the \"Tools -> Options -> IDL To Cpp\" dialog box.");
                 return;
             }
-            if (!generatorDir.EndsWith("/") && !generatorDir.EndsWith("\\"))
-            {
-                generatorDir += "/";
-            }
-            string generatorPath = generatorDir + "interface_generator_app.exe";
+            
+            string generatorPath = Path.Combine(generatorDir, "interface_generator_app.exe");
             if (!System.IO.File.Exists(generatorPath))
             {
-                ShowMessage(string.Format(CultureInfo.CurrentCulture, "Generator does not exist. path: {0}\n" +
-                    "Please set the generator path in the \"Tools -> Options -> IDL To Cpp\" dialog box.", generatorPath));
+                ShowMessage($"Generator does not exist. path: {generatorPath}\n" +
+                    "Please set the generator path in the \"Tools -> Options -> IDL To Cpp\" dialog box.");
                 return;
             }
 
@@ -132,27 +129,32 @@ namespace G6IdlToCpp
                 outPath = "idl-out";
             }
 
-            if (!outPath.StartsWith("/") && !outPath.StartsWith("\\") && !outPath.Contains(":"))
+            if (!Path.IsPathRooted(outPath))
             {
                 string currentPath = dte.Solution.FullName;
                 if (!IsDir(currentPath))
                 {
                     currentPath = Path.GetDirectoryName(currentPath);
                 }
-                outPath = string.Format(CultureInfo.CurrentCulture, "{0}\\{1}", currentPath, outPath);
+                outPath = Path.Combine(currentPath, outPath);
             }
 
             // create code generator process
-            System.Diagnostics.Process proc = new System.Diagnostics.Process();
-            proc.StartInfo.FileName = generatorPath;
-            proc.StartInfo.Arguments = string.Format(CultureInfo.CurrentCulture, "-i {0} -d {1} -o {2}",
-                filename, Path.GetDirectoryName(filename), outPath);
-            proc.StartInfo.RedirectStandardError = true;
-            proc.StartInfo.RedirectStandardOutput = true;
-            proc.StartInfo.UseShellExecute = false;
-            proc.StartInfo.CreateNoWindow = true;
+            var proc = new System.Diagnostics.Process()
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo()
+                {
+                    FileName = generatorPath,
+                    Arguments = $"-i {filename} -d {Path.GetDirectoryName(filename)} -o {outPath}",
+                    RedirectStandardError = true,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
             // use OutputDataReceived() / ErrorDataReceived() in order to read both streams without deadlocks
-            ConcurrentQueue<string> messages = new ConcurrentQueue<string>();
+            var messages = new ConcurrentQueue<string>();
             proc.ErrorDataReceived += (object se, System.Diagnostics.DataReceivedEventArgs args) =>
             {
                 string data = args.Data;
@@ -173,10 +175,7 @@ namespace G6IdlToCpp
             while (!proc.HasExited || !messages.IsEmpty)
             {
                 if (messages.TryDequeue(out string data))
-                {
-                    // input.cc:2:9: warning: ...
                     ShowMessage(data.Replace("input.cc", codeFileName));
-                }
                 else
                     System.Threading.Thread.Sleep(1);
             }
@@ -221,9 +220,9 @@ namespace G6IdlToCpp
                 return false;
             }
 
-            StreamReader sr = new StreamReader(filename, Encoding.Default);
+            var stream = new StreamReader(filename, Encoding.Default);
             string content;
-            while ((content = sr.ReadLine()) != null)
+            while ((content = stream.ReadLine()) != null)
             {
                 if (content.ToString().Contains("interface"))
                 {
@@ -236,7 +235,7 @@ namespace G6IdlToCpp
 
         public static bool IsDir(string filepath)
         {
-            FileInfo fi = new FileInfo(filepath);
+            var fi = new FileInfo(filepath);
             return (fi.Attributes & FileAttributes.Directory) != 0;
         }
     }

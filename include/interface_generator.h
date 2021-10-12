@@ -27,7 +27,7 @@ namespace glasssix::ymer
 		bool load_predefined(std::string_view file_name);
 		bool load_template(std::string_view interface_file, std::string_view impl_file, std::string_view func_file);
 		void set_include_path(std::vector<std::string> dirs);
-		void set_output_path(std::string_view path);
+		std::string_view set_output_path(std::string_view path);
 
 		bool run(std::string_view file_name);
 

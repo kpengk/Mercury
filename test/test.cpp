@@ -73,6 +73,12 @@ TEST_F(generateTest, Widget)
 }
 
 
+TEST_F(generateTest, OutputPath)
+{
+    ASSERT_TRUE(!generator_.set_output_path("").empty());
+}
+
+
 int main(int argc, char** argv)
 {
 	printf("%s\n", argv[0]);
