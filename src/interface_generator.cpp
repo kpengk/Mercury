@@ -49,7 +49,7 @@ namespace glasssix::ymer
 			std::ifstream ifs(file.data());
 			if (!ifs.is_open())
 			{
-				fprintf(stderr, u8"open file fail. [%s].\n", file.data());
+				fprintf(stderr, u8"\033[31mOpen file fail. [%s].\n\033[0m", file.data());
 				if (ok)
 					*ok = false;
 
@@ -196,16 +196,24 @@ namespace glasssix::ymer
 			return output_path_;
 		}
 
-		bool run(std::string_view file_name)
+		bool run_file(std::string_view file_name)
 		{
-			interface_json_.clear();
-			std::vector<ymer::interface_decl> all_class_info;
-			if (!analysis(file_name, all_class_info))
+			// read file
+			bool ok;
+			std::string code = read_file(file_name, &ok);
+			if (!ok)
 			{
 				return false;
 			}
 
-			if (all_class_info.empty())
+			return run_code(code);
+		}
+
+		bool run_code(std::string_view code)
+		{
+			interface_json_.clear();
+			std::vector<ymer::interface_decl> all_class_info;
+			if (code.empty() || !analysis(code, all_class_info) || all_class_info.empty())
 			{
 				return false;
 			}
@@ -297,20 +305,14 @@ namespace glasssix::ymer
 			return funcs;
 		}
 
-		bool analysis(std::string_view file_name, std::vector<ymer::interface_decl>& result)
+		bool analysis(std::string_view code, std::vector<ymer::interface_decl>& result)
 		{
-			// read file
-			bool ok;
-			std::string code = read_file(file_name, &ok);
-			if (!ok)
-			{
-				return false;
-			}
-
-			const auto& header = depend_header(code);
+			const auto& header = depend_header(code.data());
 
 			// pretreatment
-			std::array<std::string, 5> attributes{ u8"in", u8"out", u8"inout", u8"set", u8"get" };
+			std::string whole_code = "#include \"" + predefined_file_ + "\"\n" + code.data();
+
+			static const std::array<std::string, 5> attributes{ u8"in", u8"out", u8"inout", u8"set", u8"get" };
 			for (std::string_view attr : attributes)
 			{
 				char old_str[64]{};
@@ -318,14 +320,10 @@ namespace glasssix::ymer
 				sprintf_s(old_str, sizeof(old_str), u8"\\[\\s*\\[\\s*%s\\s*\\]\\s*\\]", attr.data());
 				sprintf_s(new_str, sizeof(new_str), u8"__attribute__((annotate(\"%s\")))", attr.data());
 
-				code = replace_regex(code, old_str, new_str);
+				whole_code = replace_regex(whole_code, old_str, new_str);
 			}
 
-			//std::string whole_code = predefined_code_ + code;
-			std::string whole_code = "#include \"" + predefined_file_ + "\"\n" + code;
-
 			// run
-			const auto& code_file_name = std::filesystem::path(file_name).filename().string();
 			const bool ret = clang::tooling::runToolOnCodeWithArgs(std::make_unique<ymer::analysis_action>(result), whole_code.c_str(), run_args_);
 			if (ret)
 			{
@@ -454,9 +452,14 @@ namespace glasssix::ymer
 		return impl_->set_output_path(path);
 	}
 
-	bool interface_generator::run(std::string_view file_name)
+	bool interface_generator::run_file(std::string_view file_name)
 	{
-		return impl_->run(file_name);
+		return impl_->run_file(file_name);
+	}
+
+	bool interface_generator::run_code(std::string_view code)
+	{
+		return impl_->run_code(code);
 	}
 
 	std::vector<std::string> interface_generator::function_signature()

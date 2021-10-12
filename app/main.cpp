@@ -78,7 +78,7 @@ int main(int argc, char** argv) try
 	auto absolute_path = handle.set_output_path(output_path);
 	fprintf(stdout, u8"Output path: %s\n", absolute_path.data());
 
-	if (handle.run(input_file))
+	if (handle.run_file(input_file))
 	{
 		fprintf(stdout, "Code generated successfully.\n");
 	}

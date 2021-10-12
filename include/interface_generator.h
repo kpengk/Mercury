@@ -4,16 +4,22 @@
 #include <memory>
 
 #ifdef _WIN32
-#ifdef INTERFACE_GENERATOR_EXPORT
+#ifdef  INTERFACE_GENERATOR_EXPORT
 #define INTERFACE_GENERATOR_API __declspec(dllexport)
 #else
 #define INTERFACE_GENERATOR_API __declspec(dllimport)
 #endif
-#else
-#ifdef INTERFACE_GENERATOR_EXPORT
+#else  // _WIN32
+#ifdef  INTERFACE_GENERATOR_EXPORT
 #define INTERFACE_GENERATOR_API __attribute__((visibility("default")))
 #endif
+#endif // _WIN32
+
+#ifdef INTERFACE_GENERATOR_STATIC
+#undef  INTERFACE_GENERATOR_API
+#define INTERFACE_GENERATOR_API
 #endif
+
 
 namespace glasssix::ymer
 {
@@ -29,7 +35,8 @@ namespace glasssix::ymer
 		void set_include_path(std::vector<std::string> dirs);
 		std::string_view set_output_path(std::string_view path);
 
-		bool run(std::string_view file_name);
+		bool run_file(std::string_view file_name);
+		bool run_code(std::string_view code);
 
 		std::vector<std::string> function_signature();
 
