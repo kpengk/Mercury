@@ -195,7 +195,7 @@ IDL类型对应于C++的类型如下：
 
 1. 配置代码生成器路径，即interface_generator_app.exe所在路径；
 
-   ![img1](images\img1.png)
+   ![img1](images/img1.png)
 
 2. 打开需要生成C++代码的接口文件，点击鼠标右键菜单的”IDL To CPP“即可生成C++代码文件。
 
@@ -219,7 +219,7 @@ IDL类型对应于C++的类型如下：
 
 打包完成将在当前路径下生成**g6-abi-generator-0.0.1.vsix**插件。打开vscode的插件市场，选择**从VSIX安装**即可安装插件。
 
-![img2](images\img2.png)
+![img2](images/img2.png)
 
 ### 使用
 
@@ -227,11 +227,11 @@ IDL类型对应于C++的类型如下：
 
    - 进入插件设置
 
-   ![img3](images\img3.png)
+   ![img3](images/img3.png)
 
    - 选择在settings.json中进行编辑
 
-   ![img4](images\img4.png)
+   ![img4](images/img4.png)
 
    - 在json中增加生成器路径，如下所示：
 
