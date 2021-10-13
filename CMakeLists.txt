@@ -4,7 +4,7 @@
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project ("abi_interface_generator")
+project ("interface_generator")
 
 if((NOT (CMAKE_BUILD_TYPE STREQUAL "Debug")) AND (NOT (CMAKE_BUILD_TYPE STREQUAL "Release")))
 	set(CMAKE_BUILD_TYPE "Release")

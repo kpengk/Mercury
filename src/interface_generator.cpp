@@ -49,7 +49,7 @@ namespace glasssix::ymer
 			std::ifstream ifs(file.data());
 			if (!ifs.is_open())
 			{
-				fprintf(stderr, u8"\033[31mOpen file fail. [%s].\n\033[0m", file.data());
+				fprintf(stderr, u8"\033[31mOpen file error. [%s].\n\033[0m", file.data());
 				if (ok)
 					*ok = false;
 
@@ -75,7 +75,7 @@ namespace glasssix::ymer
 			std::ofstream ofs(code_file_name.data());
 			if (!ofs.is_open())
 			{
-				fprintf(stderr, u8"open output file fail. [%s].\n", code_file_name.data());
+				fprintf(stderr, u8"open output file error. [%s].\n", code_file_name.data());
 				return false;
 			}
 			try
@@ -84,7 +84,7 @@ namespace glasssix::ymer
 			}
 			catch (const std::exception& e)
 			{
-				fprintf(stderr, u8"\033[31mGenerate code exception: %s.\n\033[0m", e.what());
+				fprintf(stderr, u8"\033[31mGenerate code error, exception: %s.\n\033[0m", e.what());
 				ofs.close();
 				return false;
 			}
@@ -284,7 +284,7 @@ namespace glasssix::ymer
 			}
 			catch (const std::exception& e)
 			{
-				fprintf(stderr, u8"\033[31mGenerate code exception: %s.\n\033[0m", e.what());
+				fprintf(stderr, u8"\033[31mGenerate code error, exception: %s.\n\033[0m", e.what());
 				return std::vector<std::string>();
 			}
 

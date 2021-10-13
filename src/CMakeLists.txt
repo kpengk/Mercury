@@ -2,7 +2,7 @@
 
 add_definitions(-DINTERFACE_GENERATOR_EXPORT)
 
-set(targetname abi_interface_generator)
+set(targetname ${PROJECT_NAME})
 
 file(GLOB SRCFILE *.h *.cpp)
 
