@@ -3,12 +3,13 @@
 Mercury是实现自定义IDL语言自动展开为C++代码的项目，该项目基于[LLVM](https://github.com/llvm/llvm-project)实现。项目包含以下部分：
 
 - include：使用abi_interface_generator库所需的头文件；
-
 - src：基于[LLVM](https://github.com/llvm/llvm-project)实现IDL展开为C++代码的核心库，包含IDL的解析和C++代码的生成；
 - app：调用abi_interface_generator库的一个控制台工具，使用此工具可将IDL转换为C++代码；
 - data：展开为C++代码的模板文件，修改模板文件可改变生成后的C++代码；
 - idl_file：测试所使用的IDL文件；
-- test：测试代码。
+- test：测试代码；
+- VsPlugin：vs插件代码；
+- VscodePlugin：vscode插件代码。
 
 # 编译
 
@@ -25,7 +26,7 @@ Mercury基于C++17编写，其依赖于[LLVM](https://github.com/llvm/llvm-proje
 - abi_interface_generator.dll
 - interface_generator_app.exe
 
-# 使用说明
+# APP说明
 
 使用工具`interface_generator_app.exe`前请将`data`目录复制到`interface_generator_app.exe`所在目录。
 
@@ -181,6 +182,68 @@ IDL类型对应于C++的类型如下：
    ./interface_generator_app.exe -i Line.h -o ./
    ```
 
+# 插件说明
+
+## Visual Studio 插件
+
+### 编译安装
+
+1. 使用**Visual Studio 2019**打开**VsPlugin/G6IdlToCpp.sln**工程，编译此工程后，在项目输出目录下将生成**G6IdlToCpp.vsix**插件；
+2. 关闭所有 Visual Studio，双击 G6IdlToCpp.vsix 即进行插件安装。
+
+### 使用
+
+1. 配置代码生成器路径，即interface_generator_app.exe所在路径；
+
+   ![img1](images\img1.png)
+
+2. 打开需要生成C++代码的接口文件，点击鼠标右键菜单的”IDL To CPP“即可生成C++代码文件。
+
+## Visual Studio Code 插件
+
+### 编译安装
+
+1. 安装[Node.js](https://nodejs.org/en/)
+
+2. 安装打包工具`vsce`
+
+   ```shell
+   npm i vsce -g
+   ```
+
+3. 打包成`vsix`文件：进入VscodePlugin目录，执行打包命令
+
+   ```shell
+   vsce package
+   ```
+
+打包完成将在当前路径下生成**g6-abi-generator-0.0.1.vsix**插件。打开vscode的插件市场，选择**从VSIX安装**即可安装插件。
+
+![img2](images\img2.png)
+
+### 使用
+
+1. 配置代码生成器路径，即interface_generator_app.exe所在路径；
+
+   - 进入插件设置
+
+   ![img3](images\img3.png)
+
+   - 选择在settings.json中进行编辑
+
+   ![img4](images\img4.png)
+
+   - 在json中增加生成器路径，如下所示：
+
+     ```json
+     {
+         // ...
+         "g6-abi-generator.generatorPath": "C:\\Users\\Glasssix-KP\\Tool",
+         "g6-abi-generator.outputPath": "."
+     }
+     ```
+
+2. 打开需要生成C++代码的接口文件，点击鼠标右键菜单的”IDL To CPP“即可生成C++代码文件。
 
 # 运行测试
 
