@@ -237,7 +237,6 @@ IDL类型对应于C++的类型如下：
 
      ```json
      {
-          ...
          "g6-abi-generator.generatorPath": "C:\\Users\\Glasssix-KP\\Tool",
          "g6-abi-generator.outputPath": "."
      }
