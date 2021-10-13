@@ -193,7 +193,7 @@ IDL类型对应于C++的类型如下：
 
 ### 使用
 
-1. 配置代码生成器路径，即interface_generator_app.exe所在路径；
+1. 进入Visual Studio的**“工具“—>"选项"**页配置**代码生成器**路径（即interface_generator_app.exe所在路径）和生成的C++代码输出路径；
 
    ![img1](images/img1.png)
 
@@ -217,7 +217,7 @@ IDL类型对应于C++的类型如下：
    vsce package
    ```
 
-打包完成将在当前路径下生成**g6-abi-generator-0.0.1.vsix**插件。打开vscode的插件市场，选择**从VSIX安装**即可安装插件。
+打包完成将在当前路径下生成**g6-abi-generator-0.0.1.vsix**插件。打开vscode的扩展（Ctrl+Shift+X），选择**从VSIX安装...**即可安装插件。
 
 ![img2](images/img2.png)
 
