@@ -1,5 +1,7 @@
 # Mercury
 
+[![release](https://img.shields.io/github/v/release/kpengk/Mercury)](https://github.com/kpengk/Mercury/releases/latest)
+
 Mercury是实现自定义IDL语言自动展开为C++代码的项目，该项目基于[LLVM](https://github.com/llvm/llvm-project)实现。项目包含以下部分：
 
 - include：使用abi_interface_generator库所需的头文件；
